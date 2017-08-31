@@ -1,0 +1,105 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">购买商品</h1>
+</div>
+
+<div class="container" style="padding-bottom: 60px;">
+    <ul class="cart-list buy-list">
+        
+    </ul>
+
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/template.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/html" id="goods-item">
+    {{each listItems as item i}}
+    <li>
+      <a class="am-block" href="javascript:location.href=preUrl('index/goods_detail.html?id={{item.goods_id}}')">
+        <div class="cart-fr am-cf">
+            <img src="{{item.goods_imgurl}}">
+            <div class="content">
+                <h2 class="am-text-truncate title">{{item.goods_name}}</h2>
+                {{if item.goods_sku_firt != null && item.goods_sku_firt != ''}}
+                <div class="size"><span>{{item.goods_sku_firt}}：<b>{{item.goods_sku_firt_name}}</b></span></div>
+                {{/if}}
+                <div class="price">
+                    ￥<span class="am-text-default">{{item.goods_price}}</span>
+                    <span class="am-fr j-ku">X<b>{{item.goods_count}}</b></span>
+                </div>
+            </div>
+        </div>
+      </a>
+    </li>
+    {{/each}}
+</script>
+
+<script type="text/html" id="goods-item-other">
+    {{each goods_items as item i}}
+    <li>
+      <a class="am-block" href="javascript:location.href=preUrl('index/goods_detail.html?id={{item.goods_id}}')">
+        <div class="cart-fr am-cf">
+            <img src="{{item.goods_imgurl}}">
+            <div class="content">
+                <h2 class="am-text-truncate title">{{item.goods_name}}</h2>
+                {{if item.goods_sku_firt != null && item.goods_sku_firt != ''}}
+                <div class="size"><span>{{item.goods_sku_firt}}：<b>{{item.goods_sku_firt_name}}</b></span></div>
+                {{/if}}
+                <div class="price">
+                    ￥<span class="am-text-default">{{item.goods_price}}</span>
+                    <span class="am-fr j-ku">X<b>{{item.goods_count}}</b></span>
+                </div>
+            </div>
+        </div>
+      </a>
+    </li>
+    {{/each}}
+</script>
+<script type="text/javascript">
+    $(function(){
+        var token = store.getCookie('token');
+        var ids = getQueryString('ids');
+
+        if(ids == '0'){
+            console.log('ok');
+            var cartObj = store.getInfo('cartObj');
+            console.log(cartObj);
+            var html = template('goods-item-other', cartObj);
+            $('.buy-list').html(html);
+        } else {
+            var params = {
+                token: token,
+                ids: ids
+            }
+
+            postAjax(reqUrl('cart_list'), params, true, function(data){
+                console.log(data);
+                var html = template('goods-item', data.infor);
+
+                $('.buy-list').html(html);
+            });
+        }     
+    });
+</script>
+</body>
+</html>
+

@@ -1,0 +1,294 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">购物车</h1>
+    <div class="am-header-right am-header-nav">
+        <a class="j-edit" data="0" href="#">编辑</a>
+    </div>
+</div>
+
+<div class="container" style="padding-bottom: 60px;">
+    <ul class="cart-list">
+
+    </ul>
+
+
+    <div class="am-navbar oz-navbar" style="line-height: normal;">
+        <div class="check-all-wrap">
+            <input type="checkbox" class="mt check-all">
+            <span class="am-block">全选</span>
+        </div>
+        <div class="cart-oper">
+            <div class="all">
+                <div>合计：￥<span class="j-total">0.00</span></div>
+                <span class="c-grey am-text-xs">不含运费</span> 
+            </div>
+            <a class="btn-sm" href="javascript:;">去结算</a>
+        </div>
+    </div>
+
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/template.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+
+<script type="text/html" id="cart-list">
+    {{each listItems as item i}}
+    <li>
+        <input type="checkbox" class="mt check-one" data-id="{{item.id}}" data-sendPay="{{item.send_pay}}">
+        <div class="cart-fr am-cf">
+            <img src="{{item.goods_imgurl}}">
+            <div class="content">
+                <h2 class="am-text-truncate title">{{item.goods_name}}</h2>
+                <div class="size">
+                    {{if item.goods_sku_firt != ''}}
+                    <span>{{item.goods_sku_firt}}：<b class="j-sku" data-id="{{item.goods_sku_firt_id}}">{{item.goods_sku_firt_name}}</b></span>
+                    {{/if}}
+                </div>
+                <div class="price">
+                    ￥<span class="am-text-default j-price">{{item.goods_price}}</span>
+                    <span class="am-fr j-ku">X<b class="j-count">{{item.goods_count}}</b></span>
+                    <div class="count-wrap am-fr">
+                        <span class="w-minus" data-cartid="{{item.id}}"> -</span>
+                        <b class="w-count" data-stock="{{item.goods_stock}}">{{item.goods_count}}</b>
+                        <span class="w-add" data-id="{{item.goods_id}}">+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+    {{/each}}
+</script>
+
+<script type="text/javascript">
+    $(function(){
+        console.log(document.referrer);
+        var token = store.getCookie('token');
+
+        var params = {
+            token: token
+        }
+
+        postAjax(reqUrl('agent_shopcar_list'), params, true, function(data){
+            console.log(data);
+            if(data.error_code == '200'){
+                window.location.href = preUrl('login/login.html');
+            } else if (data.success) {
+                 var html = template('cart-list', data.infor);
+                $('.cart-list').html(html);
+
+                getTotalMoney();
+
+                //购物车操作商品数量
+                $('.w-minus').on('click',function(){
+                    countOper('-',this);
+
+                    var count = $(this).next('.w-count').html();
+                    if (count > 1) {
+                        var id = $(this).attr('data-cartid');
+                        var params_minus = {
+                            token: token,
+                            keytype: 1,
+                            id: id,
+                            count: count
+                        }
+                        var that = $(this);
+                        postAjax(reqUrl('agent_shopcar_remove'), params_minus, true, function(data){
+                            console.log(data);
+                            if(data.success){
+                                var text = that.next().html();
+                                that.parent().prev().find('.j-count').html(text);
+                            } else {
+                                mask(data.msg);
+                            }
+                        });
+                    }
+                    
+                });
+                $('.w-add').on('click',function(){
+                    var sale = parseInt($(this).prev('.w-count').attr('data-stock'));
+                    countOper('+', this, sale);
+
+                    var id = $(this).attr('data-id');
+                    var count = $(this).prev('.w-count').html();
+
+                    var skuObj = $(this).parents('.price').prev().find('.j-sku');
+                    if (skuObj) {
+                        var sizeId = skuObj.attr('data-id');
+                        var sizeName = skuObj.html();
+                    } else {
+                        var sizeId = '';
+                        var sizeName = '';
+                    }
+
+                    // 调取添加购物车接口
+                    var params_add = {
+                        token: token,
+                        id: id,
+                        sku_ids: sizeId,
+                        sku_names: sizeName,
+                        count: 1
+                    }
+                    var that = $(this);
+                    postAjax(reqUrl('agent_shopcar_add'), params_add, true, function(data){
+                        if(data.success){
+                            // mask('添加购物车成功');
+                            var text = that.prev().html();
+                            that.parent().prev().find('.j-count').html(text);
+                        } else {
+                            mask(data.msg);
+                        }
+                    });
+                });
+
+
+                //全选操作
+                $('.mt').each(function(){
+                    $(this).click(function(){
+                       if($(this).hasClass('check-all')) {
+                          $('.check-one').prop('checked',this.checked);
+                       } else if(!this.checked) {
+                          $('.check-all').prop('checked',false);
+                       }
+                       console.log(this.checked);
+                       getTotalMoney();
+                       // getTotal(false);
+                       // getCount(false);
+                    });  
+                });
+
+            } else {
+                mask(data.msg);
+            } 
+        });
+
+
+        // 编辑
+        $('.j-edit').on('click', function(){
+            var data = parseInt($(this).attr('data')); 
+            if (data === 0) {
+                $(this).html('完成');
+                $(this).attr('data', 1);
+                $('.j-ku').hide().next().show();
+                $('.all').hide();
+                $('.btn-sm').addClass('active').html('删除');
+            } else {
+                $(this).html('编辑');
+                $(this).attr('data', 0);
+                $('.j-ku').show().next().hide();
+                $('.all').show();
+                $('.btn-sm').removeClass('active').html('去结算');
+                getTotalMoney();
+            }
+        });
+
+        $('.btn-sm').on('click', function(){
+            if ($(this).hasClass('active')) { // 删除
+                var delId = '';
+                $('.mt').each(function(){
+                    if($(this).is(':checked')){
+                        if($(this).hasClass('check-all')){
+                            delId = 0;
+                        } else {
+                            delId += $(this).attr('data-id')+ ',';
+                        }
+                    }
+                });
+                
+                if(delId == ''){
+                    mask('您还没有选择商品哦');
+                    return;
+                }
+
+                if(delId == 0){
+                    var params_del = {
+                        token: token,
+                        keytype: 3,
+                        id: delId,
+                        count: ''
+                    }   
+                } else {
+                    delId = delId.substring(0, delId.length - 1);
+
+                    var params_del = {
+                        token: token,
+                        keytype: 2,
+                        id: delId,
+                        count: ''
+                    }
+                }
+                postAjax(reqUrl('agent_shopcar_remove'), params_del, true, function(data){
+                    console.log(data);
+                    if(data.error_code == '200'){
+                        window.location.href = preUrl('login/login.html');
+                    } else if (data.success) {
+                        mask('删除成功');
+                    } else {
+                        mask(data.msg);
+                    }
+                });
+            } else { // 去结算
+                var selectId = '';
+                var sendPay = 0;
+                var pics = '';
+                $('.check-one').each(function(){
+                    if($(this).is(':checked')){
+                        selectId += $(this).attr('data-id') + ','; 
+                        sendPay = parseFloat($(this).attr('data-sendPay'));
+                        pics += $(this).next().find('img').attr('src') + ',';
+                    }
+                });
+                if(selectId == ''){
+                    mask('您还没有选择商品哦');
+                    return;
+                }
+                selectId = selectId.substring(0, selectId.length - 1);
+                sendPay = sendPay.toFixed(2);
+                pics = pics.substring(0, pics.length - 1);
+                var total = $('.j-total').html();
+                console.log(pics);
+
+
+                window.location.href = preUrl('index/cart_confirm.html?ids='+ selectId +'&sendPay='+ sendPay+'&total='+ total +'&pics='+ pics);
+            }
+        });
+
+        //合计
+        function getTotalMoney(){
+            var sum = 0;
+            // $('.j-total').html(sum.toFixed(2));
+
+            $('.price').each(function(){
+                if($(this).parents('li').find('input.mt').is(':checked')){
+                    var price = parseFloat($(this).find('.j-price').html());
+                    console.log(price);
+                    var count = parseInt($(this).find('.j-count').html());
+                    sum += price*count;
+                } 
+            });
+            $('.j-total').html(sum.toFixed(2));
+        }  
+
+    });
+</script>
+</body>
+</html>
+

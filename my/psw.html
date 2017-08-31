@@ -1,0 +1,117 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header border-b">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">密码管理</h1>
+</div>
+
+<div class="container" style="padding-bottom: 50px;">
+    <form action="" method="post" class="am-form login-wrap">
+        <div class="goods-content cart-wrap">
+            <div class="am-form-group">
+                <input type="password" id="old-psw" placeholder="原密码" />
+            </div>
+            <div class="am-form-group">
+                <input type="password" id="new-psw" placeholder="请输入6~20位密码" />
+            </div>
+            <div class="am-form-group n-border">
+                <input type="password" id="new-psw-confirm" placeholder="确认新密码" />
+            </div>
+        </div>
+
+        <a class="btn-lg active" href="javascript:;">确定</a>
+
+    </form>
+   
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/md5.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+
+<script type="text/javascript">
+$(function(){
+    var token = store.getCookie('token');
+
+    $('.btn-lg').on('click', function(){
+        var oldPsw = $('#old-psw').val();
+        var newPsw = $('#new-psw').val();
+        var newPswConfirm = $('#new-psw-confirm').val();
+
+        console.log(oldPsw.length);
+
+        if(oldPsw == ''){
+            mask('旧密码不能为空');
+            return;
+        }
+
+        if(oldPsw.length < 6 || oldPsw.length > 20){
+            mask('旧密码输入错误');
+            return;
+        }
+
+        if(newPsw == ''){
+            mask('新密码不能为空');
+            return;
+        }
+
+        if(newPsw.length < 6 || newPsw.length > 20){
+            mask('请输入6~20位新密码');
+            return;
+        }
+
+        if(newPswConfirm == ''){
+            mask('新密码不能为空');
+            return;
+        }
+
+        if(newPswConfirm.length < 6 || newPswConfirm.length > 20){
+            mask('请输入6~20位新密码');
+            return;
+        }
+
+        // if(oldPsw == newPsw){
+        //     mask('新密码不能和旧密码相同');
+        //     return;
+        // }
+
+        var params = {
+            token: token,
+            old_password: hex_md5('wZPtYpX79aJ0ZL21nO' + hex_md5(oldPsw)),
+            new_password: hex_md5('wZPtYpX79aJ0ZL21nO' + hex_md5(newPsw))
+        }
+        postAjax(reqUrl('password_save'), params, true, function(data){
+            if(data.error_code == '200'){
+                window.location.href = preUrl('login/login.html');
+            } else if(data.success){
+                mask('修改成功');
+                setTimeout(function(){
+                    window.location.href = preUrl('my/my.html');
+                }, 500);
+            }
+        });
+
+    });
+
+});
+</script>
+
+</body>
+</html>
+

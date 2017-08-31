@@ -1,0 +1,171 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header border-b">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">添加新地址</h1>
+</div>
+
+<div class="container" style="padding-bottom: 50px;">
+
+    <div class="goods-content cart-wrap">
+        <div class="other">
+            <div class="title">详细地址 </div>
+        </div>
+        <div class="other">
+            <textarea rows="4" id="j-address" placeholder="提示：收件人需要填写真实姓名+手机号+地址"></textarea>
+        </div>
+    </div>
+
+    <div class="goods-content cart-wrap">
+        <div class="other">
+            <div class="title">添加地址图片 </div>
+        </div>
+        <div class="other">
+            <ul class="am-avg-sm-3 upload-wrap">
+                <li>
+                    <img src="../assets/i/upload.jpg">
+                    <!-- <i class="icon-del"></i> -->
+                    <input type="file" class="j-file">
+                </li>
+                <!-- <li>
+                    <img src="../assets/i/upload.jpg">
+                    <i class="icon-del"></i>
+                </li>
+                <li>
+                    <img src="../assets/i/upload.jpg">
+                    <i class="icon-del"></i>
+                </li> -->
+            </ul>
+        </div>
+    </div>
+
+    <div class="set-default">
+        <input type="checkbox" checked class="mt" />
+        <span class="am-padding-left-xs">设为默认</span>
+    </div>
+
+    <a class="btn-lg active" href="javascript:;">保存</a>
+
+   
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/exif.min.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/javascript">
+$(function(){
+    var token = store.getCookie('token');
+
+    var id = getQueryString('id');
+    var address = getQueryString('address');
+    var pic = getQueryString('pic');
+    var isTacit = getQueryString('is_tacit');
+    console.log(pic);
+
+    
+
+    if(id != 0){
+        if(address != ''){
+            $('#j-address').val(address);
+        }
+        if(pic != ''){
+            $('.upload-wrap').find('img').attr('src', pic);
+        }
+
+        if(isTacit == '0'){
+            $('.mt').prop('checked',false);
+        } else if(isTacit == '1'){
+            $('.mt').prop('checked',true);
+        }
+
+    }
+
+    
+
+    var imgData;
+    $('.j-file').on('change',function(e){
+        if (!window.FileReader) return; 
+
+        e.stopPropagation();
+        e.preventDefault(); 
+      
+        var file = e.target.files[0];  
+        var content = '';
+   
+        if (!file.type.match('image.*')) {  
+            alert('文件'+ f.name + '不是图片') 
+            return;   
+        }   
+
+        var orientation;
+        //EXIF js 可以读取图片的元信息 https://github.com/exif-js/exif-js
+        EXIF.getData(file,function(){
+            orientation=EXIF.getTag(this,'Orientation');
+        });
+
+        var reader = new FileReader();  
+        
+        reader.onload = function(e){             
+            getImgData(this.result,orientation,function(data){
+                imgData = data;
+                $('.upload-wrap').find('img').attr('src', imgData);
+            });
+               
+        } 
+        reader.readAsDataURL(file);     
+    });
+
+
+    $('.btn-lg').on('click', function(){
+        var isSelect = $('.mt').prop('checked') ? 1 : 0;
+        var img = $('.upload-wrap').find('img').attr('src');
+        var address = $('#j-address').val(); 
+
+        if(img.slice(-10) == 'upload.jpg' && address == ''){
+            mask('地址和图片其中一个必填!');
+            return false;
+        }
+        
+        var params = {
+            token: token,
+            id: id,
+            address: address,
+            is_tacit: isSelect,
+            base_img: img
+        }
+
+        postAjax(reqUrl('address_add1'), params, true, function(data){
+            if (data.error_code == '200') {
+                window.location.href = preUrl('login/login.html');
+            } else if(data.success) {
+                mask('保存成功');
+                setTimeout(function(){
+                    window.history.back();
+                }, 600);
+            } else {
+                mask(data.msg);
+            }
+        });
+    });
+
+})
+</script>
+</body>
+</html>
+

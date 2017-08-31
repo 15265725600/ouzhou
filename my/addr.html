@@ -1,0 +1,178 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header border-b">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">收货地址</h1>
+</div>
+
+<div class="container" style="padding-bottom: 50px;">
+    <!-- 没有收货地址 -->
+    <!-- <div class="no-addr">
+        <i class="icon-addr"></i>
+        <p>您还没有收货地址？</p>
+    </div> -->
+    <!-- <div class="goods-content cart-wrap">
+    </div> -->
+    <div class="addr-list"></div>
+
+    <div class="am-navbar oz-navbar" style="line-height: 34px;">
+        <a class="btn-lg active" href="javascript:location.href=preUrl('my/addr_edit.html?id=0')">添加新地址</a>
+    </div>
+   
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/dropload.min.js"></script>
+<script src="../assets/js/template.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+
+<script type="text/html" id="addr-item">
+    {{each listItems as item i}}
+    <div class="goods-content cart-wrap">  
+        <div class="other">
+            <div class="title">
+                收货人信息 
+                <span class="am-inline-block am-fr">
+                    <a class="icon-del-his" data-id="{{item.id}}" href="javascript:;"></a>
+                    <b class="mid-line">|</b>
+                    <a class="icon-edit" href="javascript:location.href=preUrl('my/addr_edit.html?id={{item.id}}&address={{escape(item.address)}}&pic={{item.address_pic}}&is_tacit={{item.is_tacit}}')"></a>
+                </span>
+            </div>
+            <div class="receiver-info" data-id={{item.id}}>
+                <!-- {{if item.name != null || item.phone != null}}
+                <div class="item">{{item.name}} <span class="am-padding-left-xl">{{item.phone}}</span></div>
+                {{/if}} -->
+                {{if item.address != null}}
+                <div class="item">{{item.address}}</div>
+                {{/if}}
+                {{if item.address_pic != null && item.address_pic != ''}}
+                <div class="img-wrap">
+                    <img src="{{item.address_pic}}">
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</script>
+<script type="text/javascript">
+    $(function(){
+        var token = store.getCookie('token');
+
+        var params = {
+            token: token,
+            page: 0
+        }
+
+        $('.container').dropload({
+            scrollArea: window,
+            domDown: {
+                domNoData  : '<div class="dropload-noData">没有更多</div>'
+            },
+            loadDownFn: function(me){    
+                postAjax(reqUrl('address_list'), params, false, function(data){
+                    if(data.error_code == '200'){
+                        window.location.href = preUrl('login/login.html');
+                    } else if(data.success) {
+                        template.helper("escape", function(name){  
+                            return escape(name);  
+                        }); 
+
+                        params['page'] = params.page + 1; 
+                        console.log(params.page);
+                        if(data.infor.totalCount != '0'){
+                            var arrLen = data.infor.listItems.length;      
+                        }
+                        if(arrLen > 0){
+                            //预编译模板  
+                            var html = template('addr-item', data.infor);                       
+
+                        } else {
+                            // 锁定
+                            me.lock();
+                            // 无数据
+                            me.noData();
+                        }
+                        
+                        
+                        
+                        $('.addr-list').append(html);
+
+                        
+
+                        // 每次数据加载完，必须重置
+                        me.resetload();
+                        
+
+                    } else {
+                        mask(data.msg);
+                    }
+                });
+            }
+        });
+
+
+        // 删除地址
+        $('.icon-del-his').on('click', function(){
+            var addrId = $(this).attr('data-id');
+            var params_del = {
+                token: token,
+                id: addrId
+            }
+            postAjax(reqUrl('address_remove'), params_del, true, function(data){
+                if(data.error_code == '200'){
+                    window.location.href = 'login/login.html';
+                } else if(data.success) {
+                    mask('删除成功');
+                    setTimeout(function(){
+                        window.location.reload();
+                    }, 500); 
+                } else {
+                    mask(data.msg);
+                }
+            });
+        });
+
+        // 确认订单选择地址
+        $('.receiver-info').on('click', function(){
+            
+            var frontUrl = document.referrer.split('?')[0].slice(-12);
+            if(frontUrl == 'confirm.html'){
+                var id = $(this).attr('data-id');
+                var address = $(this).find('.item').html();
+                address = address == undefined ? '' : address;
+
+                var addressPic = $(this).find('.img-wrap img').attr('src');
+                addressPic = addressPic == undefined ? '' : addressPic;
+
+                var addrObj = {
+                    id: id,
+                    address: address,
+                    address_pic: addressPic
+                }
+                store.setInfo('addrObj', addrObj);
+                window.history.back();  
+            }
+             
+        });
+    });
+</script>
+</body>
+</html>
+

@@ -1,0 +1,180 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back"  href="javascript:history.back()" ></a>
+    </div> 
+    <h1 class="am-header-title">确认订单</h1>
+</div>
+
+<div class="container" style="padding-bottom: 60px;">
+    
+    <div class="goods-content cart-wrap" id="j-addr">
+        
+    </div>
+    <div class="goods-content cart-wrap" id="j-goods">
+        
+    </div>
+
+    <div class="am-navbar oz-navbar" style="line-height: 34px;">
+        <div class="cart-oper">
+            <div class="all">
+                <div>应付金额：￥<span class="j-all-total">23,156</span></div>
+            </div>
+            <a class="btn-sm" href="javascript:;">提交订单</a>
+        </div>
+    </div>
+
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/javascript">
+    $(function(){
+        var token = store.getCookie('token');
+        var ident_type = parseInt(store.getInfo('ident_type'));
+
+        var ids = getQueryString('ids');
+        var pics = getQueryString('pics');
+        var sendPay = getQueryString('sendPay');
+        var total = getQueryString('total');
+
+        $('#j-addr').append(getDeliverWay());
+
+        var params_addr = {
+            token: token,
+            page: 0
+        }
+
+
+        var addrObj = store.getInfo('addrObj'); // 保存的地址选择的内容
+
+        // 获取收货地址
+        if(ident_type === 2){
+            if(addrObj == null){
+                postAjax(reqUrl('address_list'), params_addr, true, function(data){
+                    console.log(data);
+                    var addrArr = data.infor.listItems;
+                    for(var i = 0; i < addrArr.length; i++){
+                        if(addrArr[i].is_tacit == '1'){
+                            var content = getAddr(addrArr[i]);
+                            $('#j-addr').append(content);
+                        }
+                    }
+                });
+            } else {
+                var content = getAddr(addrObj);
+                $('#j-addr').append(content);
+
+                store.removeInfo('addrObj');
+            }
+        }
+
+        // 中间商品部分
+        var content = getGoods(ids, pics, total, sendPay);
+        $('#j-goods').html(content);
+
+        // 底部总额
+        var allTotal = parseFloat(total) + parseFloat(sendPay);
+        $('.j-all-total').html(allTotal.toFixed(2));
+
+        // 提交订单
+        $('.btn-sm').on('click', function(){
+            var addressId = $('.receiver-info').attr('data-id');
+            var params = {
+                token: token,
+                id: ids,
+                content: $('#j-remark').val(),
+                address_id: addressId,
+                send_pay: sendPay,
+                pay: total
+            }
+            postAjax(reqUrl('agent_order_shopcar_add'), params, true, function(data){
+                console.log(data);
+                if (data.error_code == '200') {
+                    window.location.href = preUrl('login/login.html');
+                } else if (data.success) {
+                    mask('已生成订单');
+                    setTimeout(function(){
+                        // window.location.href = preUrl('index/cart.html');
+                        window.history.go(-1);
+                    }, 500);
+                } else {
+                    mask(data.msg);
+                }
+            });
+        });
+
+        // 商品
+        function getGoods(ids, pics, total, sendPay){
+            var picsArr = pics.split(',');
+            var ele = '<div class="other">';
+                ele += '<div class="title">'+ picsArr.length +'件商品</div>';
+                ele += '<div class="goods-img-wrap">';
+                for(var i = 0; i < picsArr.length; i++){
+                    ele += '<img src="'+ picsArr[i] +'">';
+                }
+                ele += '<a class="goods-link" href="javascript:location.href=preUrl(\'index/cart_goods.html?ids='+ ids +'\')">';
+                ele += '<i class="icon-forward"></i>';
+                ele += '</a>';
+                ele += '</div>';
+                ele += '</div>';
+                ele += '<div class="other">';
+                ele += '<div>商品金额： <span class="am-fr">￥'+ total +'</span></div>';
+                ele += '<div>运费： <span class="am-fr">￥'+ sendPay +'</span></div>';
+                ele += '</div>';
+                ele += '<div class="other">';
+                ele += '<textarea rows="4" id="j-remark" placeholder="购买备注：140字以内"></textarea>';
+                ele += '</div>';
+            return ele;
+        }
+        
+
+        // 收货地址
+        function getAddr(data){
+            var ele = '<div class="other">';
+                ele += '<a class="am-block" href="javascript:location.href=preUrl(\'my/addr.html\')">';
+                ele += '<div class="title">收货人信息</div>';
+                ele += '<div class="receiver-info" data-id="'+ data.id +'">';
+
+                if(data.address != null && data.address != ''){
+                    ele += '<div class="item">'+ data.address +'</div>';
+                }
+                
+                if(data.address_pic != null && data.address_pic != ''){
+                    ele += '<div class="img-wrap">';
+                    ele += '<img src="'+ data.address_pic +'">'; 
+                    ele += '</div>';
+                }
+                ele += '</div>';
+                ele += '</a>';
+                ele += '</div>';
+            return ele;
+        }
+
+        // 配送方式
+        function getDeliverWay(){
+            var ele = '<div class="other">';
+                ele += '<div class="title">配送方式 <span class="way">荷兰POSTNL快递</span></div>';
+                ele += '</div>';
+            return ele;
+        }
+    });
+</script>
+</body>
+</html>
+

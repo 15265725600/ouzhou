@@ -1,0 +1,283 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header border-b index-header">
+    <div class="search-wrap">
+        <a class="search-link" href="javascript:location.href=preUrl('index/search.html')">搜索：商品关键词进行搜索</a>
+        <i class="icon-search"></i>
+    </div>
+    <a class="news-num" href="#"> <i class="icon-news"></i> <span class="num"></span></a>
+</div>
+<div class="am-header oz-header sort-header" style="display: none;">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title"></h1>
+</div>
+
+<div class="container">
+    <div class="filter-wrap">
+        <a class="item active" href="javascript:;" data="1">
+            <span>销量 </span>
+            <i class="icon-sort"></i>
+        </a>
+        <a class="item large" href="javascript:;" data="1">
+            <span>品牌名称 </span>
+            <i class="icon-sort"></i>
+        </a>
+        <a class="item large" href="javascript:;" data="2">
+            <span>上架时间 </span>
+            <i class="icon-sort active"></i>
+        </a>
+        <a class="item" href="javascript:;" data="1">
+            <span>价格 </span>
+            <i class="icon-sort"></i>
+        </a>
+        <a class="item" href="javascript:;" data="1">
+            <span>库存 </span>
+            <i class="icon-sort"></i>
+        </a>
+    </div>
+    <ul class="goods-list" >
+    </ul>
+
+    <div class="left-navbar">
+        <a class="item" href="javascript:location.href=preUrl('my/my.html')"><i class="icon-user"></i></a>
+        <a class="item" href="javascript:location.href=preUrl('index/sort.html')"><i class="icon-classify"></i></a>
+        <a class="item j-cart" href="javascript:;"><i class="icon-cart"></i></a>
+    </div>
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/dropload.min.js"></script>
+<script src="../assets/js/template.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+
+<!-- 代理商 -->
+<script type="text/html" id="goods-item">
+    {{each listItems as goods i}}
+    <li>
+        <a class="am-block" href="javascript:location.href=preUrl('index/goods_detail.html?id={{goods.id}}')">
+            <img src="{{goods.imgurl}}">
+            <div class="content">
+                <div class="price">代理价：￥<b>{{goods.agent_price}}</b></div>
+                <p class="two-truncate title">{{goods.name}}</p>
+            </div>
+        </a>
+    </li>
+    {{/each}}
+</script>
+
+<!-- 大客户 -->
+<script type="text/html" id="goods-item-cust">
+    {{each listItems as goods i}}
+    <li>
+        <a class="am-block" href="javascript:location.href=preUrl('index/goods_detail.html?id={{goods.id}}')">
+            <img src="{{goods.imgurl}}">
+            <div class="content">
+                <div class="price"><b>€{{goods.mainclient_price}}</b></div>
+                <div class="am-text-xs c-grey-light">
+                    <div>零售价：￥<span>{{goods.mainclient_advice_price}}</span></div>
+                    <div>代理商价：￥<span>{{goods.agent_price}}</span></div>
+                </div>
+                <p class="two-truncate title">{{goods.name}}</p>
+            </div>
+        </a>
+    </li>
+    {{/each}}
+</script>
+
+<script type="text/javascript">
+    $(function(){
+        var token = store.getCookie('token');
+        var ident_type = parseInt(store.getInfo('ident_type')); // 客户类型
+        if(ident_type === 1){ // 大客户
+            $('.j-cart').remove();
+        }
+
+        console.log(typeof ident_type);
+        var page = 0;
+        var params = {
+            token: token,
+            sort_id: -1,
+            sold: '1',
+            price: '1',
+            brand: '1',
+            show_t: '2',
+            stock: '1'
+        }
+
+        var title = getQueryString('title');
+        var sortId = getQueryString('sortId');
+        console.log(title);
+        if(title == null){
+            params['sort_id'] = -1;
+            $('.index-header').show();
+            $('.left-navbar').show();
+            $('.sort-header').hide();
+        } else {
+            params['sort_id'] = sortId;
+            $('.index-header').hide();
+            $('.left-navbar').hide();
+            $('.sort-header').find('.am-header-title').html(title);
+            $('.sort-header').show();
+        }
+
+        // 默认排序方式下的商品列表
+        getGoods();
+
+        // 获取未读消息数
+        var newsParam = {
+            token: token
+        }
+        postAjax(reqUrl('unread_get'), newsParam, true, function(data){
+            if(data.error_code == '200'){
+                $('.news-num').attr('href', preUrl('login/login.html'));
+                $('.news-num .num').hide();
+            } else if(data.success){
+                console.log(data);
+                $('.news-num').attr('href', preUrl('index/news_sys.html'));
+                var num = parseInt(data.infor[0].order_num) + parseInt(data.infor[0].sys_num);
+
+                if(num === 0){
+                    $('.news-num .num').hide();
+                } else {
+                    $('.news-num .num').html(num);
+                }
+            }
+        });
+
+        // 排序
+        $('.filter-wrap .item').on('click', function(){
+            $('.filter-wrap .item').removeClass('active');
+            $(this).addClass('active');
+
+            var data = parseInt($(this).attr('data'));
+            var index = parseInt($(this).index());
+            console.log(index);
+            switch(index){
+                case 0: // 销量
+                    sortOper(data, this, params, 'sold');
+                    break;
+                case 1: // 品牌
+                    sortOper(data, this, params, 'brand'); 
+                    break;
+                case 2: // 上架时间
+                    sortOper(data, this, params, 'show_t'); 
+                    break;
+                case 3: // 价格
+                    sortOper(data, this, params, 'price'); 
+                    break;
+                case 4: // 库存
+                    sortOper(data, this, params, 'stock'); 
+                    break;
+                default:
+                    break;
+            }
+        });
+
+
+        // 查看购物车 点击购物车图标
+        $('.icon-cart').on('click', function(){
+            var token = store.getCookie('token');
+            var params_addr = {
+                token: token,
+                page: 0
+            }
+            postAjax(reqUrl('address_list'), params_addr, true, function(data){
+                console.log(data);
+                if(data.error_code == '200'){
+                    window.location.href = preUrl('login/login.html');
+                } else {
+                    window.location.href = preUrl('index/cart.html');
+                }
+            });
+        });
+
+        // 调商品列表接口
+        function getGoods() {
+            params['page'] = 0;
+            $('.container').dropload({
+                scrollArea: window,
+                domDown: {
+                    domNoData  : '<div class="dropload-noData">没有更多</div>'
+                },
+                loadDownFn: function(me){    
+                    postAjax(reqUrl('sort_goods_list1'), params, true, function(data){
+                        console.log(data);
+                        if(data.error_code == '200'){
+                            window.location.href = preUrl('login/login.html');
+                        } else if(data.success) {
+                            params['page'] = params.page + 1; 
+                            console.log(params.page);
+                            var arrLen = data.infor.listItems.length;
+                            console.log(arrLen);
+                            if(arrLen > 0){
+                                //预编译模板
+                                if(ident_type === 1){ // 大客户
+                                    var html = template('goods-item-cust', data.infor);
+                                } else { // 代理商
+                                    var html = template('goods-item', data.infor);
+                                }
+
+                            } else {
+                                // 锁定
+                                me.lock();
+                                // 无数据
+                                me.noData();
+                            }
+                            
+                            // setTimeout(function(){
+                                $('.goods-list').append(html);
+
+                                // 每次数据加载完，必须重置
+                                me.resetload();
+                            // },600);
+
+                        } else {
+                            mask(data.msg);
+                        }
+                        
+                    });
+                }
+            });
+        }
+
+        // 排序 case语句下的判断
+        function sortOper(data, obj, params, type) {
+            if(data === 2){ // 降序
+                $(obj).attr('data', 1);
+                $(obj).find('.icon-sort').removeClass('active');
+                console.log(type);
+                params[type] = '1';
+                $('.goods-list').html('');
+                $('.dropload-down').remove();
+                getGoods();
+            } else if(data === 1) { // 升序
+                $(obj).attr('data', 2);
+                $(obj).find('.icon-sort').addClass('active');
+                params[type] = '2';
+                $('.goods-list').html('');
+                $('.dropload-down').remove();
+                getGoods();
+            }  
+        }
+
+    });
+</script>
+</body>
+</html>
+

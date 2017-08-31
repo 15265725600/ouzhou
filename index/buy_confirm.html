@@ -1,0 +1,261 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">确认订单</h1>
+</div>
+
+<div class="container" style="padding-bottom: 60px;">
+    
+    <div class="goods-content cart-wrap" id="j-addr">
+      
+    </div>
+    <div class="goods-content cart-wrap" id="j-goods">
+        
+    </div>
+
+    <div class="am-navbar oz-navbar" style="line-height: 34px;">
+    </div>
+
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/javascript">
+    $(function(){
+        var token = store.getCookie('token');
+        var ident_type = parseInt(store.getInfo('ident_type'));
+        console.log(document.referrer);
+
+        $('#j-addr').append(getDeliverWay());
+
+        var params_addr = {
+            token: token,
+            page: 0
+        }
+
+        var addrObj = store.getInfo('addrObj');
+        // 获取收货地址
+        if(ident_type === 2){
+            if(addrObj == null){
+                postAjax(reqUrl('address_list'), params_addr, true, function(data){
+                    console.log(data);
+                    var addrArr = data.infor.listItems;
+                    for(var i = 0; i < addrArr.length; i++){
+                        if(addrArr[i].is_tacit == '1'){
+                            var content = getAddr(addrArr[i]);
+                            $('#j-addr').append(content);
+                        }
+                    }
+                });
+            } else {
+                var content = getAddr(addrObj);
+                $('#j-addr').append(content);
+
+                store.removeInfo('addrObj');
+            }
+            
+        }
+        
+        // 收货地址
+        function getAddr(data){
+            var ele = '<div class="other">';
+                ele += '<a class="am-block" href="javascript:location.href=preUrl(\'my/addr.html\')">';
+                ele += '<div class="title">收货人信息</div>';
+                ele += '<div class="receiver-info" data-id="'+ data.id +'">';
+                // if(data.name != null){
+                //     ele += '<div class="item">'+ data.name +' <span class="am-padding-left-xl">'+ data.phone +'</span></div>';
+                // }
+                // if(data.position != null && data.address != null){
+                //     ele += '<div class="item">'+ data.position + data.address +'</div>';
+                // } else if(data.position != null && data.address == null){
+                //     ele += '<div class="item">'+ data.position +'</div>';
+                // } else if(data.position == null && data.address != null){
+                //     ele += '<div class="item">'+ data.address +'</div>';
+                // }
+
+                if(data.address != null && data.address != ''){
+                    ele += '<div class="item">'+ data.address +'</div>';
+                }
+                
+                if(data.address_pic != null && data.address_pic != ''){
+                    ele += '<div class="img-wrap">';
+                    ele += '<img src="'+ data.address_pic +'">'; 
+                    ele += '</div>';
+                }
+                ele += '</div>';
+                ele += '</a>';
+                ele += '</div>';
+            return ele;
+        }
+
+        function getDeliverWay(){
+            var ele = '<div class="other">';
+                ele += '<div class="title">配送方式 <span class="way">荷兰POSTNL快递</span></div>';
+                ele += '</div>';
+            return ele;
+        }
+
+        function getGoods(detail, size, count, type){
+            if(type === 1){
+                var price = detail.mainclient_price;
+            } else {
+                var price = detail.agent_price;
+            }
+            console.log(typeof(size));
+            var ele = '<div class="other">';
+                ele += '<ul class="cart-list buy-list">';
+                ele += '<li>';
+                ele += '    <div class="cart-fr am-cf">';
+                ele += '        <img src="'+ detail.imgurl +'">';
+                ele += '        <div class="content">';
+                ele += '             <h2 class="am-text-truncate title">'+ detail.name +'</h2>';
+                ele += '<div class="size">';
+
+                if(size != "undefined") {
+                    ele += '            <span>size：<b>'+ size +'</b></span>';
+                }
+                ele +='</div>';
+                ele += '            <div class="price">';
+                ele += '                ￥<span class="am-text-default">'+ price +'</span>';
+                ele += '                 <span class="am-fr j-ku">X<b>'+ count +'</b></span>';
+                ele += '            </div>';
+                ele += '        </div>';
+                ele += '    </div>';
+                ele += '</li>';
+                ele += '</ul>';
+                ele += '</div>';
+                ele += '<div class="other">';
+                ele += '    <div>商品金额： <span class="am-fr">￥<b class="j-total">'+ price*count +'</b></span></div>';
+                if(detail.send_pay == '0'){
+                    ele += '    <div>运费： <span class="am-fr"><b class="j-send">包邮</b></span></div>';
+                } else {
+                    ele += '    <div>运费： <span class="am-fr">￥<b class="j-send">'+ detail.send_pay +'</b></span></div>';
+                }
+                
+                ele += '</div>';
+                ele += '<div class="other">';
+                ele += '<textarea rows="4" placeholder="购买备注：140字以内"></textarea>';
+                ele += '</div>';
+
+            return ele;
+        }
+
+        function getTotalAmount(detail, count, type){
+            if(type === 1){
+                var price = detail.mainclient_price;
+            } else {
+                var price = detail.agent_price;
+            }
+            var num = price*count + parseInt(detail.send_pay);
+
+            console.log(num);
+
+            var ele = '<div class="cart-oper">';
+                ele += '<div class="all">';
+                ele += '<div>应付金额：￥<span>'+ num +'</span></div>';
+                ele += '</div>';
+                ele += '<a class="btn-sm" href="javascript:;">提交订单</a>';
+                ele += '</div>';
+
+            return ele;
+        }
+
+        var id = getQueryString('id');
+        var sku_id = getQueryString('sku_id') == 'undefined' ? '' : getQueryString('sku_id');
+        var sku_name = getQueryString('sku_name') == 'undefined' ? '' : getQueryString('sku_name');
+        var count = parseInt(getQueryString('count'));
+        var pay = getQueryString('pay');
+
+        console.log(sku_id);
+
+        // 获取商品详情
+        var params_detail = {
+            id: id
+        }
+
+        postAjax(reqUrl('detail_get'), params_detail, true, function(data){
+            console.log(data);
+            var detail = data.infor[0];
+            var content = getGoods(detail, sku_name, count, ident_type);
+            var contentBot = getTotalAmount(detail, count, ident_type);
+            $('#j-goods').append(content);
+            $('.oz-navbar').html(contentBot);
+
+            // 提交订单
+            $('.btn-sm').on('click', function(){
+                var payAmount = $('.j-total').html();
+                console.log(payAmount);
+                var addressId = $('.receiver-info').attr('data-id');
+                var sendPay = $('.j-send').html();
+                var params = {
+                    token: token,
+                    id: id,
+                    sku_ids: sku_id,
+                    sku_names: sku_name,
+                    count: count,
+                    content: '',
+                    send_pay: sendPay,
+                    pay: payAmount
+                }
+
+                if(ident_type == '1'){ // 大客户
+                    postAjax(reqUrl('mainclient_order_add'), params, true, function(data){
+                        console.log(data);
+                        if(data.error_code == '200'){
+                            window.location.href = preUrl('login/login.html');
+                        } else if(data.success) {
+                            mask('已生成订单');
+                            setTimeout(function(){
+                                window.history.back();
+                            }, 500);
+                        } else {
+                            mask(data.msg);
+                        }
+                    });
+                } else if(ident_type == 2) { // 代理商
+                    params['address_id'] = addressId;
+                    postAjax(reqUrl('agent_order_add'), params, true, function(data){
+                        if(data.error_code == '200'){
+                            window.location.href = preUrl('login/login.html');
+                        } else if(data.success){
+                            console.log(data.infor[0].order_id);
+                            mask('已生成订单');
+                            setTimeout(function(){
+                                window.history.back();
+                            }, 500);
+                            
+                        } else {
+                            mask(data.msg);
+                        }
+                    });
+                }
+            });
+        });
+
+
+
+        
+
+
+    });
+</script>
+</body>
+</html>
+

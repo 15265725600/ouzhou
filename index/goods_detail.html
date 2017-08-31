@@ -1,0 +1,448 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">详情</h1>
+</div>
+
+<div class="container" style="padding-bottom: 60px;">
+
+
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/template.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+
+<!-- 大客户 -->
+<script type="text/html" id="detail-customer">
+    <!-- 轮播图 -->
+    <div data-am-widget="slider"  class="am-slider am-slider-default my-slider" >
+        <ul class="am-slides am-gallery" data-am-widget="gallery" data-am-gallery="{ pureview: true }">
+            {{each imgurls as value i}}
+            <li>
+                <div class="item am-gallery-item">
+                    <img src="{{value.imgurlbig}}">
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+    <div class="goods-content">
+        <div class="name">
+            <div class="price">€<span class="am-text-default">{{mainclient_price}}</span> <span class="sale">/ 零售价：￥{{mainclient_advice_price}}</span> <span class="sale">/ 代理商价：￥{{agent_price}}</span></div>
+            <p class="title">{{name}}</p>
+        </div>
+        <dl class="info">
+            {{if sku_first != ''}}
+                <dt>Size:</dt>
+                <dd> 
+                {{each sku_first_arr as size i}}
+                    <span>{{size.name}}</span> 
+                {{/each}}
+                </dd>
+                <dt>荷兰库存:</dt>  
+                <dd>
+                    {{each sku_first_arr as size i}}
+                        {{if size.stock != '0'}}
+                        <b>{{size.name}}*{{size.stock}}</b> 
+                        {{/if}}
+                    {{/each}}
+                </dd>         
+            {{else if sku_first == ''  && total_stock != '0'}}
+                <dt>荷兰库存:</dt>      
+                <dd>
+                    {{total_stock}}
+                </dd>
+            {{/if}}
+            {{if total_stock_bespoke != '' && total_stock_bespoke != '0'}}
+                <dt>国内库存:</dt>  
+                <dd>
+                    {{each sku_stock_bespoke_arr as bespoke i}}
+                        {{if bespoke.stock_bespoke != '0'}}
+                        <b>{{bespoke.name}}*{{bespoke.stock_bespoke}}</b> 
+                        {{/if}}
+                    {{/each}}
+                </dd>
+            {{/if}}
+        </dl>
+
+        <div class="other">
+            <div class="title">商品备注</div>
+            <p class="content">{{memo}}</p>
+        </div>
+        <div class="other">
+            <div class="title">运输方式</div>
+            <p class="content">荷兰postnl快递</p>
+        </div>
+    </div>
+    <div class="am-navbar oz-navbar">
+        <a class="oper-btn" id="j-buy" href="#">立即购买</a>
+    </div>
+    <!-- 加入购物车 -->
+    <div class="am-modal-actions cart-actions" id="my-car">
+        <div class="am-modal-actions-group am-margin-0">
+            <div class="base-wrap">
+                <div class="base-item am-cf">
+                    <div class="img-wrap">
+                        <a href="goods_detail.html"><img src="{{imgurl}}"></a>
+                    </div>
+                    <div class="content-fl">
+                        <h4>€<span class="am-text-default j-pay">{{mainclient_price}}</span></h4>
+                        <div class="selected">
+                            {{if sku_first != ''}}
+                            已选“<span class="j-size">{{sku_first_arr[0].name}}</span>”
+                            {{/if}}
+                        </div>
+                    </div>   
+                </div>
+                <div class="base-item">
+                    {{if sku_first !== ''}}
+                    <h4 class="am-margin-0">Size</h4>
+                    <div class="size-list">
+                        {{each sku_first_arr as size i}}
+                            <span class="item {{if i == 0}} active {{/if}}" data-id="{{size.id}}" data-stock="{{size.stock}}">{{size.name}}</span> 
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="base-item am-cf">
+                    <h4 class="am-margin-0">数量</h4>
+                    <div class="number">
+                        <span class="num">库存：
+                            {{if sku_first !== ''}}
+                            <b class="j-sale">{{sku_first_arr[0].stock}}</b>件
+                            {{else}}
+                            <b class="j-sale">{{total_stock}}</b>件
+                            {{/if}}
+                        </span>
+                        <div class="count-oper">   
+                            <span class="w-minus">-</span>
+                            <b class="w-count">1</b>
+                            <span class="w-add">+</span>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+            <a class="btn-lg" href="javascript:;">确定</a>
+        </div>
+    </div>
+
+</script>
+
+<!-- 代理商 -->
+<script type="text/html" id="detail-identity">
+    <!-- 轮播图 -->
+    <div data-am-widget="slider"  class="am-slider am-slider-default my-slider" >
+        <ul class="am-slides am-gallery" data-am-widget="gallery" data-am-gallery="{ pureview: true }">
+            {{each imgurls as value i}}
+            <li>
+                <div class="item am-gallery-item">
+                    <img src="{{value.imgurlbig}}">
+                </div>
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+    <div class="goods-content">
+        <div class="name">
+            <div class="price">￥<span class="am-text-default">{{agent_price}}</span> </div>
+            <p class="title">{{name}}</p>
+        </div>
+        <dl class="info">
+            {{if sku_first !== ''}}
+                <dt>Size:</dt>
+                <dd> 
+                {{each sku_first_arr as size i}}
+                    <span>{{size.name}}</span> 
+                {{/each}}
+                </dd>
+                <dt>荷兰库存:</dt>
+                
+                <dd>
+                    {{each sku_first_arr as size i}}
+                        {{if size.stock != '0'}}
+                        <b>{{size.name}}*{{size.stock}}</b> 
+                        {{/if}}
+                    {{/each}}
+                </dd>
+            {{else if sku_first == '' && total_stock != '0'}}
+                <dt>荷兰库存:</dt>
+                <dd>
+                    {{total_stock}}
+                </dd>
+            {{/if}}
+            {{if total_stock_bespoke != '' && total_stock_bespoke != '0'}}
+                <dt>国内库存:</dt>  
+                <dd>
+                    {{each sku_stock_bespoke_arr as bespoke i}}
+                        {{if bespoke.stock_bespoke != '0'}}
+                        <b>{{bespoke.name}}*{{bespoke.stock_bespoke}}</b> 
+                        {{/if}}
+                    {{/each}}
+                </dd>
+            {{/if}}
+        </dl>
+        <div class="other">
+            <div class="title">商品备注</div>
+            <p class="content">{{memo}}</p>
+        </div>
+        <div class="other">
+            <div class="title">运输方式</div>
+            <p class="content">荷兰postnl快递</p>
+        </div>
+    </div>
+    <div class="am-navbar oz-navbar">
+        <a class="icon-buy" href="javascript:;"></a>
+        <a class="oper-btn active" id="j-add" href="javascript:;">加入购物车</a>
+        <a class="oper-btn" id="j-buy" href="javascript:;">立即购买</a>
+    </div>
+    <!-- 加入购物车 -->
+    <div class="am-modal-actions cart-actions" id="my-car">
+        <div class="am-modal-actions-group am-margin-0">
+            <div class="base-wrap">
+                <div class="base-item am-cf">
+                    <div class="img-wrap">
+                        <a href="goods_detail.html"><img src="{{imgurl}}"></a>
+                    </div>
+                    <div class="content-fl">
+                        <h4>￥<span class="am-text-default j-pay">{{agent_price}}</span></h4>
+                        <div class="selected">
+                        {{if sku_first != ''}}
+                        已选“<span class="j-size">{{sku_first_arr[0].name}}</span>”
+                        {{/if}}
+                        </div>
+                    </div>   
+                </div>
+                <div class="base-item">
+                    {{if sku_first != ''}}
+                    <h4 class="am-margin-0">Size</h4>
+                    <div class="size-list">
+                        {{each sku_first_arr as size i}}
+                            <span class="item {{if i == 0}} active {{/if}}" data-id="{{size.id}}" data-stock="{{size.stock}}">{{size.name}}</span> 
+                        {{/each}}
+                    </div>
+                    {{/if}}
+                </div>
+                <div class="base-item am-cf">
+                    <h4 class="am-margin-0">数量</h4>
+                    <div class="number">
+                        <span class="num">库存：
+                            {{if sku_first !== ''}}
+                            <b class="j-sale">{{sku_first_arr[0].stock}}</b>件
+                            {{else}}
+                            <b class="j-sale">{{total_stock}}</b>件
+                            {{/if}}
+                        </span>
+                        <div class="count-oper">   
+                            <span class="w-minus">-</span>
+                            <b class="w-count">1</b>
+                            <span class="w-add">+</span>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+            <a class="btn-lg" href="javascript:;">确定</a>
+        </div>
+    </div>
+
+</script>
+
+<script type="text/javascript">
+    $(function(){
+
+        var ident_type = parseInt(store.getInfo('ident_type'));
+        var id = getQueryString('id');
+        var params = {
+            id: id
+        };
+
+        postAjax(reqUrl('detail_get'), params, true, function(data){
+            if(ident_type === 1){
+                var html = template('detail-customer', data.infor[0]);
+            } else {
+                var html = template('detail-identity', data.infor[0]);
+            }
+            
+            $('.container').html(html);
+
+            //初始化slider
+            $('.am-slider').flexslider({
+                slideshow: false
+            });
+
+            galleryInit();
+
+            // 立即购买
+            var clickType; // 代理商 区分点击加入购物车(2)还是立即购买(1)
+            $('#j-buy').on('click', function(){
+                if(data.infor[0].total_stock == '0' && data.infor[0].sku_first == ''){
+                    mask('该商品暂无库存！');
+                    return false;
+                }
+                $('#my-car').modal();
+                clickType = 1;
+            });
+
+            // 加入购物车
+            $('#j-add').on('click', function(){
+                if(data.infor[0].total_stock == '0' && data.infor[0].sku_first == ''){
+                    mask('该商品暂无库存！');
+                    return false;
+                }
+                $('#my-car').modal();
+                clickType = 2;
+            });
+
+            //选择size
+            $('.size-list .item').on('click', function(){
+                $('.size-list .item').removeClass('active');
+                $(this).addClass('active');
+                var text = $(this).html();
+                $('.j-size').html(text);
+
+                var stock = $(this).attr('data-stock');
+                $('.j-sale').html(stock);
+            });
+
+            //购物车操作商品数量
+            $('.w-minus').on('click',function(){
+                countOper('-',this);
+            });
+            $('.w-add').on('click',function(){
+                var sale = parseInt($('.j-sale').html());
+                countOper('+',this, sale);
+            }); 
+
+            // 购物车actions点击确定
+            $('.btn-lg').on('click', function(){
+                $('#my-car').modal('close');
+                var sizeId, sizeName;
+                $('.size-list .item').each(function(){
+                    if($(this).hasClass('active')){
+                        console.log($(this).html());
+                        sizeId = $(this).attr('data-id');
+                        sizeName = $(this).html();
+                    }
+                })
+                var count = $('.w-count').html();
+                var pay = $('.j-pay').html();
+                var token = store.getCookie('token');
+                var params_addr = {
+                    token: token,
+                    page: 0
+                }
+
+                // 获取收货地址  调用此接口来判断是否已经登录
+                postAjax(reqUrl('address_list'), params_addr, true, function(data){
+                    console.log(data);
+                    if(data.error_code == '200'){
+                        window.location.href = preUrl('login/login.html');
+                    } else {
+                        console.log(clickType);
+                       if(clickType == 1){ // 点击立即购买
+                            window.location.href = preUrl('index/buy_confirm.html?id='+ id +'&sku_id='+ sizeId +'&sku_name='+ sizeName +'&count='+ count +'&pay='+ pay); 
+                       } else { // 点击加入购物车
+                            // 调代理商购物车添加接口
+                            var params_add = {
+                                token: token,
+                                id: id,
+                                sku_ids: sizeId,
+                                sku_names: sizeName,
+                                count: count
+                            }
+                            postAjax(reqUrl('agent_shopcar_add'), params_add, true, function(data){
+                                console.log(data);
+                                if(data.success){
+                                    mask('添加购物车成功');
+                                } else {
+                                    mask(data.msg);
+                                }
+                            });
+                       }
+                       
+                    }
+                });
+            });
+
+
+            // 查看购物车 点击购物车图标
+            $('.icon-buy').on('click', function(){
+                var token = store.getCookie('token');
+                var params_addr = {
+                    token: token,
+                    page: 0
+                }
+                postAjax(reqUrl('address_list'), params_addr, true, function(data){
+                    console.log(data);
+                    if(data.error_code == '200'){
+                        window.location.href = preUrl('login/login.html');
+                    } else {
+                        window.location.href = preUrl('index/cart.html');
+                    }
+                });
+            });
+
+
+        });
+        
+        var UI = $.AMUI || {};
+        UI.utils.parseOptions = UI.utils.options = function(string) {
+          if ($.isPlainObject(string)) {
+            return string;
+          }
+
+          var start = (string ? string.indexOf('{') : -1);
+          var options = {};
+
+          if (start != -1) {
+            try {
+              options = (new Function('',
+                'var json = ' + string.substr(start) +
+                '; return JSON.parse(JSON.stringify(json));'))();
+            } catch (e) {
+            }
+          }
+
+          return options;
+        };
+        
+        function galleryInit() {
+          var $gallery = $('[data-am-widget="gallery"]');
+          console.log('ok');
+          console.log($gallery);
+          $gallery.each(function() {
+            var options = UI.utils.parseOptions($(this).attr('data-am-gallery'));
+
+            if (options.pureview) {
+              (typeof options.pureview === 'object') ?
+                $(this).pureview(options.pureview) : $(this).pureview();
+            }
+          });
+        }
+
+        
+    })
+</script>
+
+
+
+</body>
+</html>
+

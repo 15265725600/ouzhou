@@ -1,0 +1,277 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/amazeui.swiper.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <ul class="am-avg-sm-2 oz-nav">
+        <li><a href="news_sys.html">系统消息 <i class="pot j-sys" style="display: none"></i></a></li>
+        <li><a class="active" href="news_order.html">订单消息 <i class="pot j-order" style="display: none"></i></a></li>
+    </ul>
+    <div class="am-header-right am-header-nav">
+      <a class="icon-oper" href="#"></a>
+    </div>
+</div>
+
+<div class="container">
+    
+    <div id="news">   </div>
+    
+
+    <div class="am-modal-actions cart-actions" id="m-oper">
+        <div class="am-modal-actions-group am-margin-0">
+            <ul class="am-list am-text-center">
+                <li class="j-clear"><a href="#"> 清空 </a></li>
+                <li class="j-all-read"><a href="#"> 全部设为已读 </a></li>
+                <li data-am-modal-close><a class="c-red" href="#"> 取消 </a></li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- 清空弹框 -->
+    <div class="am-modal am-modal-confirm oz-confirm" tabindex="-1" id="m-clear">
+        <div class="am-modal-dialog">
+            <div class="am-modal-hd">确定清空消息列表吗？</div>
+            <div class="am-modal-bd">
+                一旦清空将不能找回
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>确定</span>
+            </div>
+        </div>
+    </div> 
+
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/amazeui.swiper.min.js"></script>
+<script src="../assets/js/dropload.min.js"></script>
+<script src="../assets/js/template.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+
+<script type="text/html" id="news-list">
+    <div class="news-wrap">
+    {{each listItems as item i}}
+        <div class="swiper-container">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide">
+                    <div class="news-item" data-id="{{item.id}}">
+                        <h4>{{item.regdate}}
+                        {{if item.looktype == '1'}} 
+                        <b class="pot"></b>
+                        {{/if}}
+                        </h4>
+                        <p class="am-margin-0">{{item.content}} </p>
+                    </div>
+                </div>
+                <div class="swiper-slide" style="width: 80px;">
+                    <div class="del-btn" data-id="{{item.id}}"></div>
+                </div>
+            </div>
+        </div>
+    {{/each}}
+    </div>
+</script>
+
+<script>
+    $(function() {
+        var token = store.getCookie('token');
+
+        var params_unread = {
+            token: token
+        }
+        getUnread();
+
+        params = {
+            token: token,
+            keytype: '5',
+            page: 0
+        }
+
+        var params_oper = {
+            token: token,
+            id: 0,
+            keytype: 5,
+            operatetype: 4
+        }
+
+
+        $('.container').dropload({
+            scrollArea: window,
+            domDown: {
+                domNoData  : '<div class="dropload-noData">没有更多</div>'
+            },
+            loadDownFn: function(me){    
+                postAjax(reqUrl('notice_list'), params, true, function(data){
+                    console.log(data);
+                    if(data.error_code === 200){
+                        window.location.href = preUrl('login/login.html');
+                    } else if(data.success){
+                        params['page'] = params.page + 1;
+                        if(data.infor.totalCount !== '0'){
+                            var arrLen = data.infor.listItems.length;
+                        }
+                        
+                        if(arrLen > 0){
+                            //预编译模板
+                            var html = template('news-list', data.infor);
+                        } else {
+                            // 锁定
+                            me.lock();
+                            // 无数据
+                            me.noData();
+                        }
+                        
+                        setTimeout(function(){
+                            $('#news').append(html);
+
+                            // 初始化swiper
+                            var mySwiper = new Swiper('.swiper-container', {
+                                slidesPerView: 'auto',
+                            });
+
+                            $('.swiper-container').each(function() {
+                                var h = $(this).outerHeight();
+                                console.log(h);
+                                $(this).find('.del-btn').css('height', h + 'px');
+                            });
+
+                            // 删除单条消息
+                            $('.del-btn').each(function() {
+                                var that = $(this);
+                                that.on('click', function() {
+                                    $(this).parents('.swiper-container').remove();
+                                    var newsId = $(this).attr('data-id');
+                                    params_oper['operatetype'] = 3;
+                                    params_oper['id'] = newsId;
+                                    postAjax(reqUrl('notice_saveoperate'), params_oper, true, function(data){
+                                        console.log(data);
+                                        if(data.success) {
+                                            mask('删除成功');
+                                            getUnread();
+                                        } else {
+                                            mask(data.msg);
+                                        }
+                                    });
+                                });
+                            });
+
+                            // 已读
+                            $('.news-wrap .news-item').each(function(){
+                                var that = $(this);
+                                that.on('click', function(){
+                                    var newsId = $(this).attr('data-id');
+                                    params_oper['operatetype'] = 1;
+                                    params_oper['id'] = newsId;
+                                    if($(this).find('.pot').css('display') == 'inline-block'){
+                                        postAjax(reqUrl('notice_saveoperate'), params_oper, true, function(data){
+                                            if(data.success) {
+                                                that.find('.pot').hide();
+                                                mask('已读');
+                                                getUnread();
+                                            } else {
+                                                mask(data.msg);
+                                            }
+                                        });
+                                    }  
+                                });
+                            }) 
+
+                            // 每次数据加载完，必须重置
+                            me.resetload();
+                        },600);
+
+                    } else {
+                        mask(data.msg);
+                    }
+                    
+                });
+            }
+        });
+
+        $('.icon-oper').on('click', function(){
+            $('#m-oper').modal();
+        });
+
+        //清空消息
+        $('.j-clear').on('click', function() {
+            $('#m-oper').modal('close');
+            $('#m-clear').modal({
+                onConfirm: function(){
+                    postAjax(reqUrl('notice_saveoperate'), params_oper, true, function(data){
+                        console.log(data);
+                        if(data.success){
+                            $('#news').html('');
+                            getUnread();
+                        }else{
+                            mask(data.msg);
+                        }
+                    });
+                }
+            });
+        });
+
+        // 全部设为已读
+        $('.j-all-read').on('click', function(){
+            $('#m-oper').modal('close');
+            params_oper['operatetype'] = 2;
+            postAjax(reqUrl('notice_saveoperate'), params_oper, true, function(data){
+                console.log(data);
+                if(data.success){
+                    $('#news').find('.pot').hide();
+                    getUnread();
+                }else{
+                    mask(data.msg);
+                }
+            });
+        });
+
+        // 获取未读消息
+        function getUnread(){
+            postAjax(reqUrl('unread_get'), params_unread, true, function(data){
+                if(data.error_code === 200){
+                    window.location.href = preUrl('login/login.html');
+                } else if(data.success){
+                    console.log(data);
+                    var orderNum = parseInt(data.infor[0].order_num);
+                    var sysNum = parseInt(data.infor[0].sys_num);
+
+                    if(orderNum != 0){
+                        $('.j-order').show();
+                    } else {
+                        $('.j-order').hide();
+                    }
+
+                    if(sysNum != 0){
+                        $('.j-sys').show();
+                    } else {
+                        $('.j-sys').hide();
+                    }
+
+                } else {
+                    mask(data.msg);
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,75 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header border-b">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-back" href="javascript:history.back()"></a>
+    </div> 
+    <h1 class="am-header-title">分类</h1>
+</div>
+
+<div class="container">
+    <div class="sort-bd">
+        <div class="sort-wrap">        
+        </div>
+    </div>
+    <!-- 首字母列表 -->
+    <ul class="alpha-list">     
+    </ul>
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/javascript">
+    $(function(){
+        postAjax(reqUrl('sort_goods_list_all1'), '', true, function(data){
+            console.log(data);
+            if (data.success) {
+                var content = '';//字母+城市
+                var alpha = '';
+                
+                var cityArr = data.infor;
+
+                for(var i = 0; i < cityArr.length; i++){
+                    var result = '';//每个字母下城市列表html
+                    var cityList = cityArr[i].sort;
+                    for(var j = 0; j < cityList.length; j++){
+                        result += '<li> <a href="javascript:location.href=preUrl(\'index/index.html?sortId='+ cityList[j].id +'&title='+ escape(cityList[j].title) +'\')">'+ cityList[j].title +'</a></li>';
+                    }
+                    content +='<div class="sort-item">'+
+                                '<div class="stick">'+ cityArr[i].charindex +'</div>'+
+                                '<p class="index-'+ cityArr[i].charindex +'">'+ cityArr[i].charindex +'</p>'+
+                                '<ul class="sort-list">'+ result +'</ul>'+
+                                '</div>';
+                    alpha += '<li><a data="'+ cityArr[i].charindex +'" href="javascript:;">'+ cityArr[i].charindex +'</a></li>';
+                }
+                $('.sort-wrap').html(content);
+                $('.alpha-list').html(alpha);
+            } else {
+                mask(data.msg);
+            }
+        });
+
+
+
+
+        var arr = alphaArr();
+        alphaList(arr);
+    })
+</script>
+</body>
+</html>
+

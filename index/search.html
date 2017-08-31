@@ -1,0 +1,82 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body> 
+
+<div class="am-header oz-header border-b">
+    <div class="search-wrap">
+        <form method="post">
+            <input type="search" id="j-search" placeholder="搜索：商品关键词进行搜索">
+            <i class="icon-search"></i>
+        </form>
+    </div>
+    <a class="news-num" href="javascript:location.href=preUrl('index/index.html')">取消</a>
+</div>
+
+<div class="container">
+    <div class="search-his">
+        <div class="title">搜索历史   <i class="icon-del-his am-fr"></i></div>
+        <div class="search-list">
+        </div>
+    </div>
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/javascript">
+$(function(){
+    var hisArr = store.getInfo('hisArr') || [];
+    console.log(hisArr);
+
+    // 渲染页面
+    if(hisArr != null) {
+        var ele = '<div class="search-list">';
+        hisArrTemp = hisArr.reverse();
+        for(var i = 0; i < hisArrTemp.length; i++) {
+            console.log(hisArrTemp[i]);
+            ele += ' <a class="item" href="javascript:location.href=preUrl(\'index/search_result.html?seachVal='+ escape(hisArrTemp[i]) +'\')">'+ hisArrTemp[i] +'</a>';
+        }
+        ele += '</div>';
+        $('.search-list').html(ele);
+    }
+
+    // 查询
+    $("#j-search").on('keypress',function(e) {  
+        var keycode = e.keyCode;  
+        var searchCont = $(this).val();  
+        if(keycode=='13') {  
+            e.preventDefault();    
+            //请求搜索接口  
+            if(searchCont == ''){
+                mask('请输入要查询的关键字');
+            } else {
+                hisArr.push(searchCont);
+                store.setInfo('hisArr', hisArr);
+                window.location.href = preUrl('index/search_result.html?seachVal='+ escape(searchCont));
+            }
+        }  
+    });  
+
+    // 删除搜索记录
+    $('.icon-del-his').on('click', function(){
+        hisArr = [];
+        store.setInfo('hisArr', hisArr);
+        $('.search-list').html('');
+    });
+    
+})
+</script>
+</body>
+</html>
+

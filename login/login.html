@@ -1,0 +1,111 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>欧洲精英汇</title>
+  <link rel="stylesheet" href="../assets/css/amazeui.min.css">
+  <link rel="stylesheet" href="../assets/css/hm_ozjyh.css">
+</head> 
+<body style="background-color: #fff;"> 
+
+<div class="am-header oz-header">
+    <div class="am-header-left am-header-nav">
+      <a class="icon-close" href="javascript:history.back()"></a>
+    </div> 
+</div>
+
+<div class="container login-wrap">
+    <h1>您好，请登录</h1>
+    <form action="" method="post" class="am-form">
+        <div class="am-form-group">
+            <input type="text" id="j-account" placeholder="账号" />
+        </div>
+        <div class="am-form-group">
+            <input type="password" id="j-psw" placeholder="请输入6~20位密码" />
+        </div>
+        <a class="btn-lg active" id="j-login" href="#">登录</a>
+        <div class="hint">登录请联系微信：keanbv <a class="am-fr" href="javascript:;" data-am-modal="{target: '#m-forget'}">忘记密码？</a></div>
+    </form>
+    
+    <!-- 提示弹框 -->
+    <div class="am-modal am-modal-confirm oz-confirm" tabindex="-1" id="m-forget">
+        <div class="am-modal-dialog">
+            <div class="am-modal-bd" style="padding: 30px 10px;">
+                登录请联系微信：keanbv
+            </div>
+            <div class="am-modal-footer">
+                <span class="am-modal-btn" data-am-modal-cancel>取消</span>
+                <span class="am-modal-btn" data-am-modal-confirm>确定</span>
+            </div>
+        </div>
+    </div> 
+</div>                  
+
+<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/amazeui.min.js"></script>
+<script src="../assets/js/md5.js"></script>
+<script src="../assets/js/hm_ozjyh.js"></script>
+<script type="text/javascript">
+$(function(){
+
+    var para = window.location.search;
+    if(para !=''){
+        var index = para.indexOf('&path');
+        var subPara = para.substring(0,index);
+        // var path = GetQueryString('path') + subPara;
+    }
+
+    $('#j-login').on('click',function(){
+        if($('#j-account').val()==""){
+            $('#j-account').focus();
+            mask('账号不能为空');
+            return false;
+        }
+        var sMobile = /^[1][358][0-9]{9}$/;
+        if(!sMobile.exec($("#j-account").val()))
+        { 
+            mask('手机号格式不正确');
+            return false;
+        }
+
+        if($('#j-psw').val()==""){
+            mask('密码不能为空');
+            return false;
+        }
+
+        var psw = hex_md5('wZPtYpX79aJ0ZL21nO' + hex_md5($("#j-psw").val()));
+
+        var params = {
+            username: $('#j-account').val(),
+            password: psw,
+            lastloginversion: '1.0.0'
+        }
+
+        postAjax(reqUrl('client_login'), params, true, function(data){
+            console.log(data);
+            if (data.success) {
+                store.setCookie("token", data.infor[0].token, 365);
+                store.setInfo('ident_type', data.infor[0].ident_type);
+                // alert('登录成功');
+                // if(path) {
+                //     window.location.href = preUrl(path);
+                // } else {
+                    window.location.href = preUrl('index/index.html');
+                // }
+            } else {
+                mask(data.msg);
+            }
+        });
+
+         return false;
+    });
+})
+</script>
+</body>
+</html>
+
