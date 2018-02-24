@@ -1064,11 +1064,14 @@
 	display: inline-block;
 	width: 7px;
 	height: 10px;
-	.bg-image('icon-sort-desc');
+	.bg-image('icon-sort-default');
 	background-size: 100% 100%;
 	margin-left: 4px;
-	&.active{
+	&.asc{
 		.bg-image('icon-sort-asc');
+	}
+	&.desc{
+		.bg-image('icon-sort-desc');
 	}
 }
 

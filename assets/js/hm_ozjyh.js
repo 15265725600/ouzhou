@@ -62,7 +62,7 @@ function countOper(type,obj, sale){
 
 //页面地址前缀
 function preUrl(path){
-    var fUrl = 'http://192.168.2.110/hm_chen/hm_ozjyh/';
+    var fUrl = 'http://127.0.0.1:8020/hm_ozjyh/';
     return fUrl + path;
 }
 
